@@ -258,9 +258,6 @@ module ActiveModel
       # set during the request lifecycle or by the controller class, and should
       # not be manually defined for this method.
       def build_json(controller, resource, options)
-        default_options = controller.send(:default_serializer_options) || {}
-        options = default_options.merge(options || {})
-
         serializer = options.delete(:serializer) ||
           (resource.respond_to?(:active_model_serializer) &&
            resource.active_model_serializer)
@@ -340,7 +337,9 @@ module ActiveModel
         @options[:hash] = hash = {}
         @options[:unique_values] = {}
 
-        hash.merge!(root => serializable_hash)
+        root_name = @options[:camel_case] ? root.to_s.camelize(:lower) : root
+
+        hash.merge!(root_name => serializable_hash)
         include_meta hash
         hash
       else
@@ -454,14 +453,17 @@ module ActiveModel
     # object attributes.
     def attributes
       _fast_attributes
-      rescue NameError
+
+    rescue NameError
         method = "def _fast_attributes\n"
 
+        method << "  use_camel_case = options[:camel_case]\n"
         method << "  h = {}\n"
 
         _attributes.each do |name,key|
-          method << "  h[:\"#{key}\"] = read_attribute_for_serialization(:\"#{name}\") if include?(:\"#{name}\")\n"
+          method << "  h[use_camel_case ? :#{key.to_s.camelize(:lower)} : :#{key}] = read_attribute_for_serialization(:\"#{name}\") if include?(:\"#{name}\")\n"
         end
+
         method << "  h\nend"
 
         self.class.class_eval method

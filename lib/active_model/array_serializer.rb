@@ -46,6 +46,7 @@ module ActiveModel
       @options[:unique_values] = {}
 
       if root = @options[:root]
+        root = root.to_s.camelize(:lower) if @options[:camel_case]
         hash.merge!(root => serializable_array)
         include_meta hash
         hash
