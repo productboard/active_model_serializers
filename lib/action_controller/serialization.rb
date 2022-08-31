@@ -36,7 +36,7 @@ module ActionController
     def self.camelize(object)
       if object.is_a?(Array)
         object.map { |value| camelize(value) }
-      elsif object.respond_to?(:as_json)
+      elsif !object.is_a?(String) && object.respond_to?(:as_json)
         object.as_json.deep_transform_keys! { |key| key.to_s.camelize(:lower) }
       else
         object
