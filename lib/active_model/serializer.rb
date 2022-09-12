@@ -510,7 +510,11 @@ module ActiveModel
     end
 
     def serializable_hash
-      @object.as_json(@options)
+      result = @object.as_json(@options)
+
+      return ActiveModelSerializers.camelize(result) if @options[:camel_case]
+
+      result
     end
   end
 end

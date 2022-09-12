@@ -33,25 +33,6 @@ module ActionController
       self._serialization_scope = :current_user
     end
 
-    def self.is_primitive_type(object)
-      case object
-      when FalseClass, NilClass, Numeric, String, Symbol, TrueClass
-        true
-      else
-        false
-      end
-    end
-
-    def self.camelize(object)
-      if object.is_a?(Array)
-        object.map { |value| camelize(value) }
-      elsif !is_primitive_type(object) && object.respond_to?(:as_json)
-        object.as_json.deep_transform_keys! { |key| key.to_s.camelize(:lower) }
-      else
-        object
-      end
-    end
-
     def get_serializer_options(options)
       default_serializer_options.merge(options || {})
     end
@@ -69,12 +50,14 @@ module ActionController
           return super(resource.to_json(**serializer_options), options)
         end
 
-        json = ActiveModel::Serializer.build_json(self, resource, get_serializer_options(options))
+        json = ActiveModel::Serializer.build_json(self, resource, serializer_options)
 
         if json
           super(json, options)
         elsif serializer_options[:camel_case] && resource.respond_to?(:as_json)
-          super(ActionController::Serialization.camelize(resource), options)
+          camelized_resource = ActiveModelSerializers.camelize(resource)
+
+          super(camelized_resource, options)
         else
           super(resource, options)
         end
