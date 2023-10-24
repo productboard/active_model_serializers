@@ -35,6 +35,27 @@ if defined?(Rails)
   end
 end
 
+module ActiveModelSerializers
+  def self.camelize(object)
+    if object.is_a?(Array)
+      object.map { |value| camelize(value) }
+    elsif !is_primitive_type(object) && object.respond_to?(:as_json)
+      object.as_json.deep_transform_keys! { |key| key.to_s.camelize(:lower) }
+    else
+      object
+    end
+  end
+
+  def self.is_primitive_type(object)
+    case object
+    when FalseClass, NilClass, Numeric, String, Symbol, TrueClass
+      true
+    else
+      false
+    end
+  end
+end
+
 module ActiveModel::SerializerSupport
   extend ActiveSupport::Concern
 

@@ -28,8 +28,13 @@ module ActionController
     include ActionController::Renderers
 
     included do
+      class_attribute :default_serializer_options, default: {}
       class_attribute :_serialization_scope
       self._serialization_scope = :current_user
+    end
+
+    def get_serializer_options(options)
+      default_serializer_options.merge(options || {})
     end
 
     def serialization_scope
@@ -37,15 +42,22 @@ module ActionController
         respond_to?(_serialization_scope, true)
     end
 
-    def default_serializer_options
-    end
-
     [:_render_option_json, :_render_with_renderer_json].each do |renderer_method|
       define_method renderer_method do |resource, options|
-        json = ActiveModel::Serializer.build_json(self, resource, options)
+        serializer_options = get_serializer_options(options)
+
+        if resource.is_a?(AllSerializer)
+          return super(resource.to_json(**serializer_options), options)
+        end
+
+        json = ActiveModel::Serializer.build_json(self, resource, serializer_options)
 
         if json
           super(json, options)
+        elsif serializer_options[:camel_case] && resource.respond_to?(:as_json)
+          camelized_resource = ActiveModelSerializers.camelize(resource)
+
+          super(camelized_resource, options)
         else
           super(resource, options)
         end
