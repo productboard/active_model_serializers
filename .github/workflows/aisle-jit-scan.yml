@@ -23,9 +23,9 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-
       - uses: productboard/shared-workflows/.github/actions/jit-scan@049662c75ef011f3165aef8e32d9c4446d409da0 # main
+        with:
           api_token: ${{ secrets.AISLE_API_TOKEN }}
-          api_url:   ${{ secrets.AISLE_API_URL }}
+          api_url: ${{ secrets.AISLE_API_URL }}
           scan_types: sast,sca,licenses
           fail_on_findings: false
