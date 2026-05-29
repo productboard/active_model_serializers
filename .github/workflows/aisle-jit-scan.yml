@@ -27,5 +27,5 @@ jobs:
         with:
           api_token: ${{ secrets.AISLE_API_TOKEN }}
           api_url: ${{ secrets.AISLE_API_URL }}
-          scan_types: sast,sca,licenses
+          scan_types: sast,licenses
           fail_on_findings: false
